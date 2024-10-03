@@ -1,3 +1,11 @@
+import tkinter as tk
+from tkinter import filedialog, messagebox, scrolledtext
+import pandas as pd
+from docx import Document
+from bs4 import BeautifulSoup
+import csv
+import os
+
 # Definición de los estados
 states = [
     'q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 
@@ -260,12 +268,13 @@ diccionario = {
     'q196': {c: 'q197' for c in 'abcdef0123456789'},
     'q197': {c: 'q198' for c in 'abcdef0123456789'},
     'q198': {c: 'q199' for c in 'abcdef0123456789'},
-    
+    'q199': {}
     
 }
 
 
 
+# Clase AFD para procesar cadenas
 class AFD:
     def __init__(self, estados, transiciones, estado_inicial, estados_aceptacion):
         self.estados = estados
@@ -273,7 +282,8 @@ class AFD:
         self.estado_actual = estado_inicial
         self.estados_aceptacion = estados_aceptacion
     
-    def procesar_cadena(self, cadena):
+    def procesar_cadena(self, cadena, fila):
+        ocurrencias = []
         for i in range(len(cadena)):
             self.reiniciar()  # Reiniciar el autómata para cada nueva posición
             for simbolo in cadena[i:]:  # Procesar desde la posición actual
@@ -284,18 +294,76 @@ class AFD:
 
             # Verificar si al finalizar la cadena, estamos en un estado de aceptación
             if self.estado_actual in self.estados_aceptacion:
-                return True  # ARN válido encontrado
+                ocurrencias.append((fila, i, cadena[i:]))  # Fila, columna/posición y texto de la ocurrencia
 
-        return False  # Ningún ARN válido encontrado
+        return ocurrencias
 
     def reiniciar(self):
         self.estado_actual = 'q0'  # Reiniciar al estado inicial
 
 
-# Definir los estados de aceptación (esto es arbitrario, puedes ajustarlo según el objetivo)
-estados_aceptacion = ['q13', 'q199', 'q129']  # Puedes agregar más estados de aceptación según sea necesario
+# Función para leer diferentes tipos de archivos
+def leer_archivo(archivo):
+    if archivo.endswith('.csv'):
+        # Leer archivo CSV
+        df = pd.read_csv(archivo)
+        return df.to_string(index=False).splitlines()  # Convertir DataFrame a lista de líneas de texto
+    
+    elif archivo.endswith('.xlsx'):
+        # Leer archivo Excel
+        df = pd.read_excel(archivo)
+        return df.to_string(index=False).splitlines()  # Convertir DataFrame a lista de líneas de texto
+    
+    elif archivo.endswith('.docx'):
+        # Leer archivo DOCX
+        doc = Document(archivo)
+        return [p.text for p in doc.paragraphs if p.text.strip()]  # Extraer solo líneas con texto
+    
+    elif archivo.endswith('.html'):
+        # Leer archivo HTML
+        with open(archivo, 'r', encoding='utf-8') as file:
+            soup = BeautifulSoup(file, 'html.parser')
+            return [soup.get_text()]
+        
+    elif archivo.endswith('.txt'):
+        # Leer archivo TXT
+        with open(archivo, 'r', encoding='utf-8') as file:
+            return file.readlines()  # Leer todas las líneas del archivo .txt 
 
-# Crear una instancia del autómata con los estados y transiciones
+    else:
+        raise ValueError("Formato de archivo no soportado.")
+
+
+# Función principal para buscar ocurrencias
+def buscar_ocurrencias(archivo):
+    # Leer el archivo con los patrones de texto
+    cadenas = leer_archivo(archivo)
+    
+    ocurrencias = []
+
+    # Procesar cada cadena con el autómata
+    for fila, cadena in enumerate(cadenas):
+        cadena = cadena.strip()  # Eliminar espacios en blanco y saltos de línea
+        resultados = afd.procesar_cadena(cadena, fila)
+        ocurrencias.extend(resultados)
+
+    return ocurrencias
+
+
+# Función para exportar resultados a CSV
+def exportar_ocurrencias_a_csv(ocurrencias, archivo_salida):
+    with open(archivo_salida, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Fila', 'Posición', 'Texto'])
+
+        for ocurrencia in ocurrencias:
+            writer.writerow(ocurrencia)
+
+
+# Definir los estados de aceptación
+estados_aceptacion = ['q13', 'q199', 'q129']  # Ajustar según corresponda
+
+# Crear una instancia del autómata (recuerda definir el diccionario de transiciones `diccionario`)
 afd = AFD(
     estados=states, 
     transiciones=diccionario, 
@@ -303,14 +371,83 @@ afd = AFD(
     estados_aceptacion=estados_aceptacion
 )
 
-# Leer las cadenas desde un archivo .txt
-with open('ARNvalidator/test.txt', 'r') as file:
-    cadenas = file.readlines()  # Leer todas las líneas del archivo
 
-# Procesar cada cadena
-for cadena in cadenas:
-    cadena = cadena.strip()  # Eliminar espacios en blanco y saltos de línea
-    if afd.procesar_cadena(cadena):
-        print(f"La cadena '{cadena}' es aceptada por el autómata.")
+# Funciones de la interfaz GUI
+def seleccionar_archivo():
+    archivo = filedialog.askopenfilename(
+        filetypes=[
+            ("Todos los archivos soportados", "*.csv *.xlsx *.docx *.html *.txt"),
+            ("CSV Files", "*.csv"),
+            ("Excel Files", "*.xlsx"),
+            ("Word Files", "*.docx"),
+            ("HTML Files", "*.html"),
+            ("Text Files", "*.txt")
+        ]
+    )
+    if archivo:
+        entrada_archivo.set(archivo)
+
+def procesar_archivo():
+    archivo_entrada = entrada_archivo.get()
+    if not archivo_entrada or not os.path.isfile(archivo_entrada):
+        messagebox.showerror("Error", "Selecciona un archivo válido.")
+        return
+
+    try:
+        ocurrencias = buscar_ocurrencias(archivo_entrada)
+        mostrar_ocurrencias(ocurrencias)
+    except Exception as e:
+        messagebox.showerror("Error", f"Ocurrió un error: {e}")
+
+def mostrar_ocurrencias(ocurrencias):
+    # Limpiar el cuadro de texto
+    text_area.delete(1.0, tk.END)
+    
+    # Mostrar cada ocurrencia encontrada
+    if ocurrencias:
+        for ocurrencia in ocurrencias:
+            text_area.insert(tk.END, f"Fila: {ocurrencia[0]}, Posición: {ocurrencia[1]}, Texto: {ocurrencia[2]}\n")
     else:
-        print(f"La cadena '{cadena}' no es aceptada por el autómata.")
+        text_area.insert(tk.END, "No se encontraron coincidencias.")
+
+def guardar_reporte():
+    archivo_salida = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
+    if archivo_salida:
+        ocurrencias = text_area.get(1.0, tk.END).strip().splitlines()
+        ocurrencias_procesadas = [tuple(line.split(", ")) for line in ocurrencias if line]
+        try:
+            exportar_ocurrencias_a_csv(ocurrencias_procesadas, archivo_salida)
+            messagebox.showinfo("Éxito", f"Ocurrencias exportadas a '{archivo_salida}'")
+        except Exception as e:
+            messagebox.showerror("Error", f"Ocurrió un error al guardar: {e}")
+
+# Crear ventana principal
+root = tk.Tk()
+root.title("Validador de ARN")
+
+# Variables para la GUI
+entrada_archivo = tk.StringVar()
+
+# Elementos de la GUI
+label_instruccion = tk.Label(root, text="Selecciona el archivo a procesar:")
+label_instruccion.grid(row=0, column=0, padx=10, pady=10)
+
+entry_archivo = tk.Entry(root, textvariable=entrada_archivo, width=50)
+entry_archivo.grid(row=0, column=1, padx=10, pady=10)
+
+boton_seleccionar = tk.Button(root, text="Seleccionar", command=seleccionar_archivo)
+boton_seleccionar.grid(row=0, column=2, padx=10, pady=10)
+
+boton_procesar = tk.Button(root, text="Procesar Archivo", command=procesar_archivo)
+boton_procesar.grid(row=1, column=1, padx=10, pady=10)
+
+# Cuadro de texto para mostrar las ocurrencias
+text_area = scrolledtext.ScrolledText(root, width=80, height=20)
+text_area.grid(row=2, column=0, columnspan=3, padx=10, pady=10)
+
+# Botón para guardar el reporte opcionalmente
+boton_guardar = tk.Button(root, text="Guardar Reporte", command=guardar_reporte)
+boton_guardar.grid(row=3, column=1, padx=10, pady=20)
+
+# Iniciar la GUI
+root.mainloop()
