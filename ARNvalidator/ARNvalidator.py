@@ -323,7 +323,8 @@ def leer_archivo(archivo):
         # Leer archivo HTML
         with open(archivo, 'r', encoding='utf-8') as file:
             soup = BeautifulSoup(file, 'html.parser')
-            return [soup.get_text()]
+            return soup.get_text(separator='\n\n').splitlines()
+
         
     elif archivo.endswith('.txt'):
         # Leer archivo TXT
