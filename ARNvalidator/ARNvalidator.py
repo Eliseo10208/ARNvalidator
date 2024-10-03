@@ -293,7 +293,7 @@ class AFD:
 
 
 # Definir los estados de aceptación (esto es arbitrario, puedes ajustarlo según el objetivo)
-estados_aceptacion = ['q13', 'q199','q78','q198','q129']  # Puedes agregar más estados de aceptación según sea necesario
+estados_aceptacion = ['q13', 'q199', 'q129']  # Puedes agregar más estados de aceptación según sea necesario
 
 # Crear una instancia del autómata con los estados y transiciones
 afd = AFD(
@@ -303,10 +303,14 @@ afd = AFD(
     estados_aceptacion=estados_aceptacion
 )
 
-# Probar el autómata con una cadena de ejemplo
-cadena = 'arn:aws:ec2:us-east-1:123456789012:network-interface/eni-1234567890abcdef0'
+# Leer las cadenas desde un archivo .txt
+with open('ARNvalidator/test.txt', 'r') as file:
+    cadenas = file.readlines()  # Leer todas las líneas del archivo
 
-if afd.procesar_cadena(cadena):
-    print(f"La cadena '{cadena}' es aceptada por el autómata.")
-else:
-    print(f"La cadena '{cadena}' no es aceptada por el autómata.")
+# Procesar cada cadena
+for cadena in cadenas:
+    cadena = cadena.strip()  # Eliminar espacios en blanco y saltos de línea
+    if afd.procesar_cadena(cadena):
+        print(f"La cadena '{cadena}' es aceptada por el autómata.")
+    else:
+        print(f"La cadena '{cadena}' no es aceptada por el autómata.")
