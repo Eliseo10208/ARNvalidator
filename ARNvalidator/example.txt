@@ -1,0 +1,43 @@
+# Ejemplos de ARNs: EC2, Lambda y S3
+
+## EC2
+
+Válidos:
+1. arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0
+2. arn:aws:ec2:us-west-2:123456789012:volume/vol-1234567890abcdef0
+3. arn:aws:ec2:eu-west-1:123456789012:security-group/sg-1234567890abcdef0
+4. arn:aws:ec2:ap-northeast-1:123456789012:vpc/vpc-1234567890abcdef0
+
+Inválidos:
+1. arn:aws:ec2:us-central-1:123456789012:instance/i-1234567890abcdef0  // Región inválida
+2. arn:aws:ec2:us-east-1:12345:volume/vol-1234567890abcdef0  // ID de cuenta incorrecto
+3. arn:aws:ec2:us-west-2:123456789012:instance/inst-1234567890abcdef0  // Prefijo de recurso incorrecto
+4. arn:aws:ec2:eu-west-1:123456789012:vpc/vpc-1234abcd  // ID de recurso muy corto
+
+## Lambda
+
+Válidos:
+1. arn:aws:lambda:us-east-1:123456789012:function:mi-funcion
+2. arn:aws:lambda:us-west-2:123456789012:function:proceso_datos_v2
+3. arn:aws:lambda:eu-west-1:123456789012:function:api-backend-function
+4. arn:aws:lambda:ap-northeast-1:123456789012:function:MiFuncionConMayusculas
+
+Inválidos:
+1. arn:aws:lambda:us-central-1:123456789012:function:mi-funcion  // Región inválida
+2. arn:aws:lambda:us-east-1:12345:function:mi-funcion  // ID de cuenta incorrecto
+3. arn:aws:lambda:us-west-2:123456789012:mi-funcion  // Falta "function:"
+4. arn:aws:lambda:eu-west-1:123456789012:function:mi funcion  // Espacio en el nombre no permitido
+
+## S3
+
+Válidos:
+1. arn:aws:s3:::mi-bucket-unico
+2. arn:aws:s3:::datos-empresa-2023
+3. arn:aws:s3:::mi-bucket/carpeta/archivo.jpg
+4. arn:aws:s3:::www.mi-sitio-web.com
+
+Inválidos:
+1. arn:aws:s3:us-east-1:123456789012:bucket/mi-bucket  // No debe incluir región ni ID de cuenta
+2. arn:aws:s3:::Mi-Bucket  // Mayúsculas no permitidas en nombres de bucket
+3. arn:aws:s3:::mi_bucket  // Guión bajo no permitido en nombres de bucket
+4. arn:aws:s3:::arn:aws:s3:::mi-bucket-con-mas-de-63-caracteres-no-esta-permitido-en-s3-invalido  // Muy largo
