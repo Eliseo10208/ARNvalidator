@@ -272,9 +272,6 @@ diccionario = {
     
 }
 
-
-
-# Clase AFD para procesar cadenas
 class AFD:
     def __init__(self, estados, transiciones, estado_inicial, estados_aceptacion):
         self.estados = estados
@@ -285,73 +282,59 @@ class AFD:
     def procesar_cadena(self, cadena, fila):
         ocurrencias = []
         for i in range(len(cadena)):
-            self.reiniciar()  # Reiniciar el autómata para cada nueva posición
-            for simbolo in cadena[i:]:  # Procesar desde la posición actual
+            self.reiniciar()
+            for simbolo in cadena[i:]:
                 if simbolo in self.transiciones[self.estado_actual]:
                     self.estado_actual = self.transiciones[self.estado_actual][simbolo]
                 else:
-                    break  # Salir del bucle si no hay transición válida
+                    break
 
-            # Verificar si al finalizar la cadena, estamos en un estado de aceptación
             if self.estado_actual in self.estados_aceptacion:
-                ocurrencias.append((fila, i, cadena[i:]))  # Fila, columna/posición y texto de la ocurrencia
+                ocurrencias.append((fila, i, cadena[i:]))
 
         return ocurrencias
 
     def reiniciar(self):
-        self.estado_actual = 'q0'  # Reiniciar al estado inicial
+        self.estado_actual = 'q0'
 
 
-# Función para leer diferentes tipos de archivos
 def leer_archivo(archivo):
     if archivo.endswith('.csv'):
-        # Leer archivo CSV
         df = pd.read_csv(archivo)
-        return df.to_string(index=False).splitlines()  # Convertir DataFrame a lista de líneas de texto
+        return df.to_string(index=False).splitlines()
     
     elif archivo.endswith('.xlsx'):
-        # Leer archivo Excel
         df = pd.read_excel(archivo)
-        return df.to_string(index=False).splitlines()  # Convertir DataFrame a lista de líneas de texto
+        return df.to_string(index=False).splitlines()
     
     elif archivo.endswith('.docx'):
-        # Leer archivo DOCX
         doc = Document(archivo)
-        return [p.text for p in doc.paragraphs if p.text.strip()]  # Extraer solo líneas con texto
+        return [p.text for p in doc.paragraphs if p.text.strip()]
     
     elif archivo.endswith('.html'):
-        # Leer archivo HTML
         with open(archivo, 'r', encoding='utf-8') as file:
             soup = BeautifulSoup(file, 'html.parser')
             return soup.get_text(separator='\n\n').splitlines()
-
-        
+      
     elif archivo.endswith('.txt'):
-        # Leer archivo TXT
         with open(archivo, 'r', encoding='utf-8') as file:
-            return file.readlines()  # Leer todas las líneas del archivo .txt 
+            return file.readlines()
 
     else:
         raise ValueError("Formato de archivo no soportado.")
 
-
-# Función principal para buscar ocurrencias
 def buscar_ocurrencias(archivo):
-    # Leer el archivo con los patrones de texto
     cadenas = leer_archivo(archivo)
     
     ocurrencias = []
 
-    # Procesar cada cadena con el autómata
     for fila, cadena in enumerate(cadenas):
-        cadena = cadena.strip()  # Eliminar espacios en blanco y saltos de línea
+        cadena = cadena.strip()
         resultados = afd.procesar_cadena(cadena, fila)
         ocurrencias.extend(resultados)
 
     return ocurrencias
 
-
-# Función para exportar resultados a CSV
 def exportar_ocurrencias_a_csv(ocurrencias, archivo_salida):
     with open(archivo_salida, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
@@ -360,11 +343,8 @@ def exportar_ocurrencias_a_csv(ocurrencias, archivo_salida):
         for ocurrencia in ocurrencias:
             writer.writerow(ocurrencia)
 
+estados_aceptacion = ['q13', 'q199', 'q129']
 
-# Definir los estados de aceptación
-estados_aceptacion = ['q13', 'q199', 'q129']  # Ajustar según corresponda
-
-# Crear una instancia del autómata (recuerda definir el diccionario de transiciones `diccionario`)
 afd = AFD(
     estados=states, 
     transiciones=diccionario, 
@@ -372,8 +352,6 @@ afd = AFD(
     estados_aceptacion=estados_aceptacion
 )
 
-
-# Funciones de la interfaz GUI
 def seleccionar_archivo():
     archivo = filedialog.askopenfilename(
         filetypes=[
@@ -401,10 +379,8 @@ def procesar_archivo():
         messagebox.showerror("Error", f"Ocurrió un error: {e}")
 
 def mostrar_ocurrencias(ocurrencias):
-    # Limpiar el cuadro de texto
     text_area.delete(1.0, tk.END)
     
-    # Mostrar cada ocurrencia encontrada
     if ocurrencias:
         for ocurrencia in ocurrencias:
             text_area.insert(tk.END, f"Fila: {ocurrencia[0]}, Posición: {ocurrencia[1]}, Texto: {ocurrencia[2]}\n")
@@ -422,14 +398,11 @@ def guardar_reporte():
         except Exception as e:
             messagebox.showerror("Error", f"Ocurrió un error al guardar: {e}")
 
-# Crear ventana principal
 root = tk.Tk()
 root.title("Validador de ARN")
 
-# Variables para la GUI
 entrada_archivo = tk.StringVar()
 
-# Elementos de la GUI
 label_instruccion = tk.Label(root, text="Selecciona el archivo a procesar:")
 label_instruccion.grid(row=0, column=0, padx=10, pady=10)
 
@@ -442,13 +415,10 @@ boton_seleccionar.grid(row=0, column=2, padx=10, pady=10)
 boton_procesar = tk.Button(root, text="Procesar Archivo", command=procesar_archivo)
 boton_procesar.grid(row=1, column=1, padx=10, pady=10)
 
-# Cuadro de texto para mostrar las ocurrencias
 text_area = scrolledtext.ScrolledText(root, width=80, height=20)
 text_area.grid(row=2, column=0, columnspan=3, padx=10, pady=10)
 
-# Botón para guardar el reporte opcionalmente
 boton_guardar = tk.Button(root, text="Guardar Reporte", command=guardar_reporte)
 boton_guardar.grid(row=3, column=1, padx=10, pady=20)
 
-# Iniciar la GUI
 root.mainloop()

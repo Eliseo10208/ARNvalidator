@@ -41,16 +41,16 @@ Inválidos:
 1. arn:aws:lambda:us-central-1:123456789012:function:mi-funcion  // Región inválida
 2. arn:aws:lambda:us-east-1:12345:function:mi-funcion  // ID de cuenta incorrecto
 3. arn:aws:lambda:us-west-2:123456789012:mi-funcion  // Falta "function:"
-4. arn:aws:lambda:eu-west-1:123456789012:function:mi funcion  // Espacio en el nombre no permitido
+4. arn:aws:lambda:eu-west-1:1234567789012:function:mi funcion  // Espacio en el nombre no permitido
 ## S3
 Válidos:
 arn:aws:s3:::mi-bucket-unico
 2. arn:aws:s3:::datos-empresa-2023
 3. arn:aws:s3:::mi-bucket/carpeta/archivo.jpg
 4. arn:aws:s3:::www.mi-sitio-web.com
+4. arn:aws:s3:::mi_bucket
 Inválidos:
 1. arn:aws:s3:us-east-1:123456789012:bucket/mi-bucket  // No debe incluir región ni ID de cuenta
-2. arn:aws:s3:::Mi-Bucket  // Mayúsculas no permitidas en nombres de bucket
-3. arn:aws:s3:::mi_bucket  // Guión bajo no permitido en nombres de bucket
-4. arn:aws:s3:::arn:aws:s3:::mi-bucket-con-mas-de-63-caracteres-no-esta-permitido-en-s3-invalido  // Muy largo
+2. arn:aws:S3:::Mi-BucKET  // Mayúsculas no permitidas en nombres de bucket
+3. arn:ams:s3:::mi-bucket-con-mas-de-63-caracteres-no-esta-permitido-en-$ÑS3-invalido  // Muy largo
 
